@@ -6,6 +6,7 @@ import (
 	"time"
 
 	logging "github.com/ipfs/go-log"
+	ci "github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/peerstore"
@@ -19,10 +20,11 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/ipfs-force-community/venus-messager/api"
-	"github.com/ipfs-force-community/venus-messager/lib/db"
+	"github.com/ipfs-force-community/venus-messager/chain/types"
 	"github.com/ipfs-force-community/venus-messager/lib/peermgr"
 	"github.com/ipfs-force-community/venus-messager/node/config"
 	"github.com/ipfs-force-community/venus-messager/node/impl"
+	"github.com/ipfs-force-community/venus-messager/node/impl/db"
 	"github.com/ipfs-force-community/venus-messager/node/modules"
 	"github.com/ipfs-force-community/venus-messager/node/modules/dtypes"
 	"github.com/ipfs-force-community/venus-messager/node/modules/helpers"
@@ -152,6 +154,7 @@ func libp2p() Option {
 				Bootstrapper: bool(bs),
 			}
 		}),
+		Override(PstoreAddSelfKeysKey, lp2p.PstoreAddSelfKeys),
 		Override(StartListeningKey, lp2p.StartListening(config.DefaultFullNode().Libp2p.ListenAddresses)),
 	)
 }
@@ -209,7 +212,7 @@ func ConfigCommon(cfg *config.Common) Option {
 		ApplyIf(func(s *Settings) bool { return s.Online },
 			Override(new(*pubsub.PubSub), lp2p.GossipSub),
 			Override(new(*config.Pubsub), &cfg.Pubsub),
-			Override(new(*config.DbCfg), &cfg.DbCfg),
+			Override(new(*config.DBConfig), &cfg.DBCfg),
 			Override(new(*config.RPCServer), &cfg.RPCServer),
 			ApplyIf(func(s *Settings) bool { return s.Local },
 				Override(new(dtypes.BootstrapPeers), modules.ConfigBootstrap(cfg.Libp2p.BootstrapPeers, true)),
@@ -248,9 +251,11 @@ func Repo(r repo.Repo) Option {
 
 			Override(new(dtypes.MetadataDS), modules.Datastore),
 
+			Override(new(ci.PrivKey), lp2p.PrivKey),
+			Override(new(ci.PubKey), ci.PrivKey.GetPublic),
 			Override(new(peer.ID), peer.IDFromPublicKey),
 
-			//Override(new(types.KeyStore), modules.KeyStore),
+			Override(new(types.KeyStore), modules.KeyStore),
 
 			Override(new(*dtypes.APIAlg), modules.APISecret),
 
@@ -316,10 +321,10 @@ func New(ctx context.Context, opts ...Option) (StopFunc, error) {
 
 //
 func NetworkName() (dtypes.NetworkName, error) {
-	return dtypes.NetworkName(""), nil
+	return "", nil
 }
 
-func newDbProc(cfg *config.SQLiteDBConfig) (db.DBProcessInterface, error) {
+func newDbProc(cfg *config.DBConfig) (db.DBProcessInterface, error) {
 	if cfg != nil && cfg.Conn != "" {
 		return db.NewDbProcess(cfg)
 	}

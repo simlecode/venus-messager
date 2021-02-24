@@ -16,9 +16,9 @@ var log = logging.Logger("peermgr")
 func BuiltinBootstrap() ([]peer.AddrInfo, error) {
 	var out []peer.AddrInfo
 
-	b, err := ioutil.ReadFile("bootstrappers.pi")
+	b, err := ioutil.ReadFile("bootstrappers.api")
 	if err != nil {
-		log.Info("read bootstrap failed: %s", err)
+		log.Infof("read bootstrap failed: %s", err)
 		return out, nil
 	}
 
@@ -32,7 +32,7 @@ func BuiltinBootstrap() ([]peer.AddrInfo, error) {
 	out = append(out, pi...)
 
 	//b := rice.MustFindBox("bootstrap")
-	//err := b.Walk("bootstrappers.pi", func(path string, info os.FileInfo, err error) error {
+	//err := b.Walk("bootstrappers.api", func(path string, info os.FileInfo, err error) error {
 	//	if err != nil {
 	//		return xerrors.Errorf("failed to walk box: %w", err)
 	//	//	}

@@ -77,8 +77,11 @@ func VersionForType(nodeType NodeType) (Version, error) {
 
 // semver versions of the rpc api exposed
 var (
-	FullAPIVersion   = newVer(1, 0, 0)
+	FullAPIVersion = newVer(1, 0, 0)
 )
+
+// APIVersion is a semver version of the rpc api exposed
+var APIVersion Version = newVer(0, 1, 0)
 
 //nolint:varcheck,deadcode
 const (

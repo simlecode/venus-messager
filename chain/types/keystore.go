@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-state-types/crypto"
-	"github.com/prometheus/common/log"
 )
 
 var (

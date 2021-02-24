@@ -3,15 +3,14 @@ package apistruct
 import (
 	"context"
 
-	"github.com/google/uuid"
-	"github.com/libp2p/go-libp2p-core/peer"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-jsonrpc/auth"
+	"github.com/libp2p/go-libp2p-core/peer"
 
 	"github.com/ipfs-force-community/venus-messager/api"
 	"github.com/ipfs-force-community/venus-messager/chain/types"
 	"github.com/ipfs-force-community/venus-messager/lib/message"
+	"github.com/ipfs-force-community/venus-messager/node/impl/db"
 )
 
 // All permissions are listed in permissioned.go
@@ -27,10 +26,6 @@ type CommonStruct struct {
 
 		LogList     func(context.Context) ([]string, error)     `perm:"write"`
 		LogSetLevel func(context.Context, string, string) error `perm:"write"`
-
-		Shutdown func(context.Context) error                    `perm:"admin"`
-		Session  func(context.Context) (uuid.UUID, error)       `perm:"read"`
-		Closing  func(context.Context) (<-chan struct{}, error) `perm:"read"`
 	}
 }
 
@@ -39,27 +34,14 @@ type FullNodeStruct struct {
 	CommonStruct
 
 	Internal struct {
-	}
-}
+		MessagePush func(ctx context.Context, msg *types.Message, meta *message.MsgMeta) error `perm:"write"`
 
-func (f FullNodeStruct) MessagePush(ctx context.Context, msg *types.Message, spec *api.MessageSendSpec, meta *message.MsgMeta) error {
-	panic("implement me")
-}
-
-func (f FullNodeStruct) MessagesPush(ctx context.Context, msg []*types.Message, spec []*api.MessageSendSpec, meta []*message.MsgMeta) error {
-	panic("implement me")
-}
-
-func (f FullNodeStruct) MessagesPub(ctx context.Context, signedMsg []*types.SignedMessage) error {
-	panic("implement me")
-}
-
-type WalletStruct struct {
-	Internal struct {
-		WalletHas  func(context.Context, address.Address) (bool, error) `perm:"write"`
-		WalletList func(context.Context) ([]address.Address, error)     `perm:"write"`
-		//WalletSign   func(context.Context, address.Address, []byte, api.MsgMeta) (*crypto.Signature, error) `perm:"sign"`
-		WalletDelete func(context.Context, address.Address) error `perm:"write"`
+		QueryMessage        func(addr address.Address, from, to uint64) ([]db.Msg, error) `perm:"read"`
+		DelMessage          func(addr address.Address, from, to uint64) error             `perm:"write"`
+		AddMessage          func(msg *types.Message, msgMeta *message.MsgMeta) error      `perm:"write"`
+		UpdateSignedMessage func(id uint64, signedMsg *types.SignedMessage) error         `perm:"write"`
+		SetNonce            func(addr address.Address, nonce uint64) error                `perm:"write"`
+		QueryNonce          func(addr address.Address) (uint64, error)                    `perm:"write"`
 	}
 }
 
@@ -91,30 +73,42 @@ func (c *CommonStruct) LogSetLevel(ctx context.Context, group, level string) err
 	return c.Internal.LogSetLevel(ctx, group, level)
 }
 
-func (c *CommonStruct) Shutdown(ctx context.Context) error {
-	return c.Internal.Shutdown(ctx)
-}
-
-func (c *CommonStruct) Session(ctx context.Context) (uuid.UUID, error) {
-	return c.Internal.Session(ctx)
-}
-
-func (c *CommonStruct) Closing(ctx context.Context) (<-chan struct{}, error) {
-	return c.Internal.Closing(ctx)
-}
-
 // FullNodeStruct
 
-func (c *WalletStruct) WalletHas(ctx context.Context, addr address.Address) (bool, error) {
-	return c.Internal.WalletHas(ctx, addr)
+func (f FullNodeStruct) MessagePush(ctx context.Context, msg *types.Message, meta *message.MsgMeta) error {
+	return f.Internal.MessagePush(ctx, msg, meta)
 }
 
-func (c *WalletStruct) WalletList(ctx context.Context) ([]address.Address, error) {
-	return c.Internal.WalletList(ctx)
+func (f FullNodeStruct) MessagesPush(ctx context.Context, msg []*types.Message, meta []*message.MsgMeta) error {
+	panic("implement me")
 }
 
-func (c *WalletStruct) WalletDelete(ctx context.Context, addr address.Address) error {
-	return c.Internal.WalletDelete(ctx, addr)
+func (f FullNodeStruct) MessagesPub(ctx context.Context, signedMsg []*types.SignedMessage) error {
+	panic("implement me")
+}
+
+func (f FullNodeStruct) QueryMessage(addr address.Address, from, to uint64) ([]db.Msg, error) {
+	return f.Internal.QueryMessage(addr, from, to)
+}
+
+func (f FullNodeStruct) DelMessage(addr address.Address, from, to uint64) error {
+	return f.Internal.DelMessage(addr, from, to)
+}
+
+func (f FullNodeStruct) AddMessage(msg *types.Message, msgMeta *message.MsgMeta) error {
+	return f.Internal.AddMessage(msg, msgMeta)
+}
+
+func (f FullNodeStruct) UpdateSignedMessage(id uint64, signedMsg *types.SignedMessage) error {
+	return f.Internal.UpdateSignedMessage(id, signedMsg)
+}
+
+func (f FullNodeStruct) SetNonce(addr address.Address, nonce uint64) error {
+	return f.Internal.SetNonce(addr, nonce)
+}
+
+func (f FullNodeStruct) QueryNonce(addr address.Address) (uint64, error) {
+	return f.Internal.QueryNonce(addr)
 }
 
 var _ api.Common = &CommonStruct{}

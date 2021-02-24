@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
-
 	"github.com/filecoin-project/go-jsonrpc/auth"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -30,14 +28,6 @@ type Common interface {
 
 	LogList(context.Context) ([]string, error)
 	LogSetLevel(context.Context, string, string) error
-
-	// trigger graceful shutdown
-	Shutdown(context.Context) error
-
-	// Session returns a random UUID of api provider session
-	Session(context.Context) (uuid.UUID, error)
-
-	Closing(context.Context) (<-chan struct{}, error)
 }
 
 // Version provides various build-time information

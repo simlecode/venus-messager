@@ -5,6 +5,7 @@ import (
 
 	"go.uber.org/fx"
 
+	"github.com/ipfs-force-community/venus-messager/chain/types"
 	"github.com/ipfs-force-community/venus-messager/node/modules/dtypes"
 	"github.com/ipfs-force-community/venus-messager/node/repo"
 )
@@ -19,6 +20,10 @@ func LockedRepo(lr repo.LockedRepo) func(lc fx.Lifecycle) repo.LockedRepo {
 
 		return lr
 	}
+}
+
+func KeyStore(lr repo.LockedRepo) (types.KeyStore, error) {
+	return lr.KeyStore()
 }
 
 func Datastore(r repo.LockedRepo) (dtypes.MetadataDS, error) {

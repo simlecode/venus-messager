@@ -11,11 +11,12 @@ import (
 	"go.opencensus.io/tag"
 	"golang.org/x/xerrors"
 
-	//"github.com/filecoin-project/lotus/node/modules/dtypes"
 	"github.com/ipfs-force-community/venus-messager/api"
 	"github.com/ipfs-force-community/venus-messager/build"
 	"github.com/ipfs-force-community/venus-messager/metrics"
 	"github.com/ipfs-force-community/venus-messager/node"
+	"github.com/ipfs-force-community/venus-messager/node/config"
+	"github.com/ipfs-force-community/venus-messager/node/modules/dtypes"
 	"github.com/ipfs-force-community/venus-messager/node/repo"
 )
 
@@ -23,9 +24,12 @@ var DaemonCmd = &cli.Command{
 	Name:  "daemon",
 	Usage: "Start a daemon process",
 	Flags: []cli.Flag{
+		&cli.StringFlag{Name: "repo", Value: "~/.venus-message"},
 		&cli.StringFlag{Name: "api", Value: "7979"},
 		&cli.BoolFlag{Name: "bootstrap", Value: true},
 		&cli.StringFlag{Name: "network", Value: ""},
+		&cli.StringFlag{Name: "message-store", Value: "messagestore"},
+		&cli.BoolFlag{Name: "debug-model", Value: true},
 	},
 	Action: func(cctx *cli.Context) error {
 		ctx, _ := tag.New(context.Background(), tag.Insert(metrics.Version, build.BuildVersion))
@@ -33,7 +37,7 @@ var DaemonCmd = &cli.Command{
 		if err != nil {
 			log.Warnw("could not expand repo location", "error", err)
 		} else {
-			log.Infof("lotus repo: %s", dir)
+			log.Infof("venus-messager repo: %s", dir)
 		}
 		r, err := repo.NewFS(cctx.String("repo"))
 		if err != nil {
@@ -52,7 +56,7 @@ var DaemonCmd = &cli.Command{
 			node.ApplyIf(func(s *node.Settings) bool { return !cctx.Bool("bootstrap") }), //node.Local(),
 
 			node.Online(),
-			//node.Repo(r),
+			node.Repo(r),
 
 			node.ApplyIf(func(s *node.Settings) bool { return cctx.IsSet("api") },
 				node.Override(node.SetApiEndpointKey, func(lr repo.LockedRepo) error {
@@ -63,10 +67,10 @@ var DaemonCmd = &cli.Command{
 					}
 					return lr.SetAPIEndpoint(apima)
 				})),
-			//node.Override(new(*config.DbCfg),
-			//	&config.DbCfg{Conn: cctx.String("keystore"), Type: "sqlite", DebugMode: true}),
+			node.Override(new(*config.DBConfig),
+				&config.DBConfig{Conn: cctx.String("message-store"), Type: "sqlite", DebugMode: cctx.Bool("debug-model")}),
 			node.ApplyIf(func(s *node.Settings) bool { return cctx.IsSet("network") }),
-			//node.Override(new(dtypes.NetworkName), dtypes.NetworkName(cctx.String("network")))),
+			node.Override(new(dtypes.NetworkName), dtypes.NetworkName(cctx.String("network"))),
 		)
 		if err != nil {
 			return xerrors.Errorf("initializing node: %w", err)

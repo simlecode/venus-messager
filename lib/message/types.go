@@ -1,5 +1,7 @@
 package message
 
+import "encoding/json"
+
 type MsgType string
 
 const (
@@ -23,4 +25,8 @@ type MsgMeta struct {
 	// Additional data related to what is signed. Should be verifiable with the
 	// signed bytes (e.g. CID(Extra).Bytes() == toSign)
 	Extra []byte
+}
+
+func (meta *MsgMeta) Serialize() ([]byte, error) {
+	return json.Marshal(meta)
 }
