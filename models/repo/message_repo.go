@@ -17,4 +17,10 @@ type MessageRepo interface {
 	GetMessageByCid(cid string) (*types.Message, error)
 	GetMessageByTime(start time.Time) ([]*types.Message, error)
 	UpdateMessageStateByCid(cid string, state types.MessageState) error
+	GetActorNonce(fromAddr string) (uint64, error)
+	ListUnAssignNonceMessages(fromAddr string) ([]*types.Message, error)
+	UpdateMessageNonce(uuid string, nonce uint64) error
+
+	LockFromAddr(fromAddr string)
+	UnlockFromAddr(fromAddr string)
 }

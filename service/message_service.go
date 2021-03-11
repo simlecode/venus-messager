@@ -114,7 +114,6 @@ func (ms *MessageService) ReconnectCheck(ctx context.Context, head *venusTypes.T
 	if err != nil {
 		return err
 	}
-
 	if len(gapTipset) == 0 {
 		return nil
 	}
@@ -140,6 +139,63 @@ func (ms *MessageService) ReconnectCheck(ctx context.Context, head *venusTypes.T
 	})
 
 	return err
+}
+
+func ExpiredMsg(msgs []*types.Message) ([]*types.Message, []*types.Message) {
+	// return unexpired,expired msgs
+	return nil, nil
+}
+
+func (ms *MessageService) MessageStreamController(ctx context.Context, fromAddr string, actorNonce, nonceGapLimit, currH uint64, sortFn func([]*types.Message, uint64) []*types.Message) error {
+	localNonce, err := ms.repo.MessageRepo().GetActorNonce(fromAddr)
+	if err != nil {
+		return err
+	}
+
+	// avoid race in nonce assign
+	// if multi process, lock should implement on db
+	ms.repo.MessageRepo().LockFromAddr(fromAddr)
+	defer ms.repo.MessageRepo().UnlockFromAddr(fromAddr)
+
+	nonceGap := localNonce - actorNonce
+	if nonceGap >= nonceGapLimit {
+		return nil
+	}
+
+	msgs, err := ms.repo.MessageRepo().ListUnAssignNonceMessages(fromAddr)
+	if err != nil {
+		return err
+	}
+
+	// expired msg should signal client
+	msgs, _ = ExpiredMsg(msgs)
+
+	msgs = sortFn(msgs, currH)
+	msgs = msgs[0:nonceGap]
+	for i := range msgs {
+		msgs[i].Nonce = localNonce + uint64(i) + 1
+		err = ms.repo.MessageRepo().UpdateMessageNonce(msgs[i].ID, msgs[i].Nonce)
+		if err != nil {
+			return xerrors.Errorf("message repo assign nonce failed %w", err)
+		}
+		err := ms.PushMessageToPool(ctx, msgs[i])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ms *MessageService) PushMessageToPool(ctx context.Context, message *types.Message) error {
+	// directly call api to estimate gas,sign msg, push msg
+	msg, err := ms.nodeClient.GasEstimateMessageGas(ctx, &message.UnsignedMessage, message.Meta, venusTypes.EmptyTSK)
+	if err != nil {
+		return err
+	}
+	signedmsg, err := ms.repo.WalletRepo().SignMsg()
+	// directly call api to pub
+	ms.nodeClient.MpoolBatchPush(ctx, []*types.SignedMessage{signedmsg})
 }
 
 func (ms *MessageService) lookAncestors(ctx context.Context, localTipset tipsetList, head *venusTypes.TipSet) ([]*venusTypes.TipSet, int, error) {
@@ -242,4 +298,5 @@ func isEqual(tf *tipsetFormat, ts *venusTypes.TipSet) bool {
 		}
 	}
 	return true
+
 }

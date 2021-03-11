@@ -9,6 +9,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-jsonrpc"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
 	chain2 "github.com/filecoin-project/venus/app/submodule/chain"
 	"github.com/filecoin-project/venus/app/submodule/network"
 	"github.com/filecoin-project/venus/pkg/chain"
@@ -18,6 +19,7 @@ import (
 	manet "github.com/multiformats/go-multiaddr/net"
 
 	"github.com/ipfs-force-community/venus-messager/config"
+	venustype "github.com/ipfs-force-community/venus-messager/types"
 )
 
 type NodeClient struct {
@@ -44,6 +46,14 @@ type NodeClient struct {
 	StateNetworkVersion    func(context.Context, types.TipSetKey) (network.Version, error)
 	StateGetActor          func(context.Context, address.Address, types.TipSetKey) (*types.Actor, error)
 	StateSearchMsgLimited  func(context.Context, cid.Cid, abi.ChainEpoch) (*chain.MsgLookup, error)
+	// ChainNotify returns channel with chain head updates.
+	// First message is guaranteed to be of len == 1, and type == 'current'.
+
+	// MpoolBatchPush batch pushes a signed message to mempool.
+	MpoolBatchPush        func(context.Context, []*types.SignedMessage) ([]cid.Cid, error)
+	GasEstimateMessageGas func(context.Context, *types.UnsignedMessage, *venustype.MessageSendSpec, types.TipSetKey) (*types.UnsignedMessage, error)
+	GasEstimateFeeCap     func(context.Context, *types.UnsignedMessage, int64, types.TipSetKey) (big.Int, error)
+	GasEstimateGasPremium func(context.Context, uint64, address.Address, int64, types.TipSetKey) (big.Int, error)
 }
 
 func NewNodeClient(ctx context.Context, cfg *config.NodeConfig) (*NodeClient, jsonrpc.ClientCloser, error) {

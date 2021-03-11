@@ -4,11 +4,13 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/crypto"
+	"github.com/filecoin-project/venus/pkg/specactors/builtin/miner"
 	"github.com/filecoin-project/venus/pkg/types"
 	"github.com/ipfs/go-cid"
 )
@@ -20,6 +22,8 @@ const (
 	OnChain
 	Revert
 )
+
+const SafePackHeight = 100
 
 // Deprecated: use 'Message'
 type DeprecatedMessage struct {
@@ -67,6 +71,8 @@ type Message struct {
 	State MessageState // 消息状态
 }
 
+type MessageSendSpec = MsgMeta
+
 func (m *Message) Cid() cid.Cid {
 	if m.Signature != nil {
 		return m.SignedCid()
@@ -106,4 +112,16 @@ func (me *MsgMeta) Scan(value interface{}) error {
 
 func (me *MsgMeta) Value() (driver.Value, error) {
 	return json.Marshal(me)
+
+}
+
+var defaultMsgSortFn = func(msgs []*Message, currH uint64) []*Message {
+	sort.Slice(msgs, func(i, j int) bool {
+		if uint64(msgs[i].Meta.ExpireEpoch) > currH-SafePackHeight && uint64(msgs[j].Meta.ExpireEpoch) > currH-SafePackHeight {
+			return msgs[i].Method == miner.Methods.ProveCommitSector
+		}
+		return msgs[i].Meta.ExpireEpoch < msgs[j].Meta.ExpireEpoch
+	})
+
+	return msgs
 }
