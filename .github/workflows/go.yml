@@ -2,6 +2,7 @@ name: Go
 
 env:
   GOPROXY: https://goproxy.cn
+  GO111MODULE: on
 
 on:
   push:
