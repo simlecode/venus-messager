@@ -1,5 +1,8 @@
 name: Go
 
+env:
+  GOPROXY: https://goproxy.cn
+
 on:
   push:
     branches: [ main ]
