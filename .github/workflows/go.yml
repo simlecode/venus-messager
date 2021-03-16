@@ -24,8 +24,11 @@ jobs:
     - name: Deps
       run: git submodule sync && git submodule update --init && ./extern/filecoin-ffi/install-filcrypto
 
-    - name: Build
-      run: go build -v ./...
+    #- name: Build
+     # run: go build -v ./...
+      
+    - name: Make
+      run: make
 
     - name: Test
       run: go test -v ./...
