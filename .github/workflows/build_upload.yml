@@ -116,16 +116,6 @@ jobs:
           path: ./${{steps.vars.outputs.bin}}
           type: tar
 
-      - name: release
-        id: release
-        uses: ncipollo/release-action@v1
-        if: ${{ steps.vars.outputs.pub_method=='pushRelease' }}
-        with:
-          artifacts: ${{steps.vars.outputs.artifact_name}}
-          tag: ${{ steps.vars.outputs.github_tag }}
-          commit: ${{ steps.vars.outputs.commit }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: upload ftp
         id: uploadftp
         if: ${{ steps.vars.outputs.ftp_exists == '1' }}
