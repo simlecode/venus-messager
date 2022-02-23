@@ -12,13 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Deps
-        env:
-          GOPROXY: "https://proxy.golang.org,direct"
-          GO111MODULE: "on"
-        run: |
-          go mod download
-
       - name: golangci-lint
         env:
           GOPROXY: "https://proxy.golang.org,direct"

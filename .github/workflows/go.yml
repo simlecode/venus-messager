@@ -18,13 +18,6 @@ jobs:
       with:
         go-version: 1.15
 
-    - name: Deps
-      env:
-        GOPROXY: "https://proxy.golang.org,direct"
-        GO111MODULE: "on"
-      run: |
-        go mod download
-
     - name: Build
       env:
         GOPROXY: "https://proxy.golang.org,direct"
