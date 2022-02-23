@@ -24,6 +24,7 @@ jobs:
       - name: vars
         id: vars
         run: |
+          export bin=bin
           export commit=$(git rev-parse HEAD)
           export short=$(git rev-parse --short HEAD)
           export github_tag=${{github.ref_name}}
@@ -51,6 +52,7 @@ jobs:
           if [[ "${{secrets.FTP_HOST}}" != "" ]]; then
             export ftp_exists=1
           fi
+          echo "::set-output name=bin::$bin"
           echo "::set-output name=commit::$commit"
           echo "::set-output name=short::$short"
           echo "::set-output name=github_tag::$github_tag"
@@ -65,6 +67,7 @@ jobs:
           echo "::set-output name=ftp_exists::$ftp_exists"
       - name: show environment
         run: |
+          echo bin = ${{steps.vars.outputs.bin}}
           echo event = ${{github.event_name}}
           echo github_repository: $GITHUB_REPOSITORY
           echo vars.commit = ${{steps.vars.outputs.commit}}
@@ -97,12 +100,12 @@ jobs:
       - name: Build
         run: |
           make
-          mkdir ./release && mv ./${{steps.vars.outputs.repo_name}} ./release
+          mkdir ./${{steps.vars.outputs.bin}} && mv ./${{steps.vars.outputs.repo_name}} ./${{steps.vars.outputs.bin}}
       - name: Zip Release
         uses: TheDoctor0/zip-release@0.6.0
         with:
           filename: ${{steps.vars.outputs.artifact_name}}
-          path: ./release
+          path: ./${{steps.vars.outputs.bin}}
           type: tar
 
       - name: release
@@ -141,12 +144,12 @@ jobs:
           export signed_url=`ossutil sign ${{secrets.OSS_BUCKET}}/${{steps.vars.outputs.artifact_name}} --timeout 31104000 | sed -n 1p`
           echo '::set-output name=oss_signed_url::$(signed_url)'
       - name: upload artifacts
-        if: ${{ steps.vars.outputs.pub_method == 'pushTest' && steps.uploadftp.outcome != 'success' && steps.cposs.outcome != 'success' }}
+        if: ${{ steps.vars.outputs.pub_method == 'pushRelease' }}
         continue-on-error: true
         uses: actions/upload-artifact@v2
         with:
           name: ${{steps.vars.outputs.artifact_name}}
-          path: ./${{steps.vars.outputs.artifact_name}}
+          path: ./${{steps.vars.outputs.bin}}
           if-no-files-found: error
 
       - name: push god-eye
