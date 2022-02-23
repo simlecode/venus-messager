@@ -10,9 +10,8 @@ on:
   push:
     branches:
       - main
-      - test*
+      - incubation
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,29 +24,24 @@ jobs:
       - name: vars
         id: vars
         run: |
-          export bin=bin
           export commit=$(git rev-parse HEAD)
           export short=$(git rev-parse --short HEAD)
-          export github_tag=${GITHUB_REF##*/}
+          export github_tag=${{github.ref_name}}
+          export tag=$github_tag
+          export branch=$github_tag
           export git_message=$(git rev-list --format=%s --max-count=1 HEAD | tail +2)
           export repo_name=${GITHUB_REPOSITORY##*/}
-          export branch=$(git symbolic-ref --short -q HEAD)
-          export tag=$(git describe --tags $(git rev-list --tags --max-count=1))
           export artifact_name=${repo_name}_$(git rev-parse --short HEAD).tar.gz
           export pub_method=pushTest
           export job_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           export oss_exists=0
           export ftp_exists=0
-          export rx='^v([0-9]+\.){0,2}(\*|[0-9]+)$'
+          export rx='^v([0-9]+\.){0,2}(\*|[0-9]+)(-rc[0-9]*){0,1}$'
+
           if [[ "${{github.ref_type}}" == "tag" ]] && [[ "${{github.event_name}}" == "create" ]] && [[ "$github_tag" =~ $rx ]]; then
             export pub_method=pushRelease
           fi
-          if [[ "$branch" == "" ]]; then
-            export branch=$github_tag
-          fi
-          if [[ "$tag" == "" ]]; then
-            export tag=$github_tag
-          fi
+
           if [[ "${{secrets.OSS_KEY_ID}}" != "" && \
             "${{secrets.OSS_KEY_SECRET}}" != "" && \
             "${{secrets.OSS_ENDPOINT}}" != "" && \
@@ -57,7 +51,6 @@ jobs:
           if [[ "${{secrets.FTP_HOST}}" != "" ]]; then
             export ftp_exists=1
           fi
-          echo "::set-output name=bin::$bin"
           echo "::set-output name=commit::$commit"
           echo "::set-output name=short::$short"
           echo "::set-output name=github_tag::$github_tag"
@@ -70,10 +63,8 @@ jobs:
           echo "::set-output name=pub_method::$pub_method"
           echo "::set-output name=oss_exists::$oss_exists"
           echo "::set-output name=ftp_exists::$ftp_exists"
-
       - name: show environment
         run: |
-          echo bin = ${{github.bin}}
           echo event = ${{github.event_name}}
           echo github_repository: $GITHUB_REPOSITORY
           echo vars.commit = ${{steps.vars.outputs.commit}}
@@ -96,7 +87,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17
-
       - name: Deps
         env:
           GOPROXY: "https://proxy.golang.org,direct"
@@ -106,15 +96,24 @@ jobs:
 
       - name: Build
         run: |
-          sudo make
-          mkdir ./${{steps.vars.outputs.bin}} && mv ./${{steps.vars.outputs.repo_name}} ./${{steps.vars.outputs.bin}}
-
+          make
+          mkdir ./release && mv ./${{steps.vars.outputs.repo_name}} ./release
       - name: Zip Release
         uses: TheDoctor0/zip-release@0.6.0
         with:
           filename: ${{steps.vars.outputs.artifact_name}}
-          path: ./${{steps.vars.outputs.bin}}
+          path: ./release
           type: tar
+
+      - name: release
+        id: release
+        uses: ncipollo/release-action@v1
+        if: ${{ steps.vars.outputs.pub_method=='pushRelease' }}
+        with:
+          artifacts: ${{steps.vars.outputs.artifact_name}}
+          tag: ${{ steps.vars.outputs.github_tag }}
+          commit: ${{ steps.vars.outputs.commit }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: upload ftp
         id: uploadftp
@@ -141,7 +140,6 @@ jobs:
           ossutil cp ./${{steps.vars.outputs.artifact_name}} ${{secrets.OSS_BUCKET}}
           export signed_url=`ossutil sign ${{secrets.OSS_BUCKET}}/${{steps.vars.outputs.artifact_name}} --timeout 31104000 | sed -n 1p`
           echo '::set-output name=oss_signed_url::$(signed_url)'
-
       - name: upload artifacts
         if: ${{ steps.vars.outputs.pub_method == 'pushTest' && steps.uploadftp.outcome != 'success' && steps.cposs.outcome != 'success' }}
         continue-on-error: true
