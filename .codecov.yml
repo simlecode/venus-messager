@@ -2,11 +2,7 @@ coverage:
   status:
     project:
       default:
-<<<<<<< HEAD
-        target: 90%
-=======
         target: 100%
->>>>>>> 2bffda3... codecov action
         threshold: 1%
 
 # https://docs.codecov.io/docs/pull-request-comments
