@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ '**' ]
 
 jobs:
 
@@ -18,18 +18,18 @@ jobs:
       with:
         go-version: 1.15
 
-    - name: Deps
-      env:
-        GOPROXY: "https://proxy.golang.org,direct"
-        GO111MODULE: "on"
-      run: |
-        sudo apt-get install ocl-icd-opencl-dev libhwloc-dev
-
     - name: Build
-      env:
-        GOPROXY: "https://proxy.golang.org,direct"
-        GO111MODULE: "on"
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+    - uses: actions/checkout@master
+    - uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true # optional (default = false)
+        files: ./.codecov.yml # optional
+
+    - name: Upload coverage to Codecov
+      run: bash <(curl -s https://codecov.io/bash)
