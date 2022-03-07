@@ -29,5 +29,3 @@ jobs:
       with:
         fail_ci_if_error: true # optional (default = false)
         files: ./.codecov.yml # optional
-        flags: unittests # optional
-        verbose: true # optional (default = false)
