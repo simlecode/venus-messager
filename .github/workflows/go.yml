@@ -2,7 +2,7 @@ name: Go
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '**' ]
   pull_request:
     branches: [ '**' ]
 
@@ -22,7 +22,7 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+      run: go test -v ./...
 
     - uses: actions/checkout@master
     - uses: codecov/codecov-action@v2
