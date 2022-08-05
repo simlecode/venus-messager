@@ -1,0 +1,13 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ['prep/**', 'release/**', 'test/**', master]
+    tags: ['**']
+
+jobs:
+
+  build_docker_image:
+    uses: github.com/simlecode/venus/tree/v1.6.0/test_ci/.github/workflows/common_docker_image.yml
+    with:
+      repo_name: ${GITHUB_REPOSITORY##*/}
