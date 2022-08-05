@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    uses: github.com/simlecode/venus/.github/workflows/common_tag_workflow.yml@v1.6.0/test_ci
+    uses: simlecode/venus/.github/workflows/common_tag_workflow.yml@v1.6.0/test_ci
     with:
       repo_name: ${GITHUB_REPOSITORY##*/}
       bin_name: 'venus-messager'
