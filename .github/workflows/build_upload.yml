@@ -4,6 +4,9 @@ on:
   push:
     branches: ['prep/**', 'release/**', 'test/**', master]
     tags: ['**']
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   build:

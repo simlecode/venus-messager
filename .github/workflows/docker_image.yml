@@ -12,5 +12,3 @@ jobs:
 
   build_docker_image:
     uses: simlecode/venus/.github/workflows/common_docker_image.yml@v1.6.0/test_ci
-    with:
-      repo_name: ${GITHUB_REPOSITORY##*/}
