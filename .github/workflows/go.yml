@@ -13,4 +13,4 @@ jobs:
   check:
     uses: simlecode/venus/.github/workflows/common_go.yml@v1.6.0/test_ci
     with:
-      repo_name: ${GITHUB_REPOSITORY##*/}
+      repo_name: ${{GITHUB_REPOSITORY##*/}}
