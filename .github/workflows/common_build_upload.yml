@@ -139,10 +139,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         continue-on-error: true
         run: |
-          cp ./${{steps.vars.outputs.artifact_name}} > ./${{steps.vars.outputs.repo}}_${{steps.vars.outputs.tag}}_linux_amd64
+          cp ./${{steps.vars.outputs.artifact_name}} > ./${{steps.vars.outputs.repo_name}}_${{steps.vars.outputs.tag}}_linux_amd64
 
       - name: shasum
-        run: shasum -a 256 ./${{steps.vars.outputs.repo}}_${{steps.vars.outputs.tag}}_linux_amd64 > ./${{steps.vars.outputs.repo}}_${{steps.vars.outputs.tag}}_linux_amd64_linux_amd64.sha256
+        run: shasum -a 256 ./${{steps.vars.outputs.repo_name}}_${{steps.vars.outputs.tag}}_linux_amd64 > ./${{steps.vars.outputs.repo_name}}_${{steps.vars.outputs.tag}}_linux_amd64_linux_amd64.sha256
         shell: bash
 
       - name: upload artifacts
@@ -159,8 +159,8 @@ jobs:
         continue-on-error: true
         with:
           files: |
-            ./${{steps.vars.outputs.repo}}_${{steps.vars.outputs.tag}}_linux_amd64
-            ./${{steps.vars.outputs.repo}}_${{steps.vars.outputs.tag}}_linux_amd64_linux_amd64.sha256
+            ./${{steps.vars.outputs.repo_name}}_${{steps.vars.outputs.tag}}_linux_amd64
+            ./${{steps.vars.outputs.repo_name}}_${{steps.vars.outputs.tag}}_linux_amd64_linux_amd64.sha256
 
       - name: upload ftp
         id: uploadftp
