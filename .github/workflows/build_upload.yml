@@ -2,12 +2,14 @@ name: build and upload
 
 on:
   push:
-    branches: ['prep/**', 'release/**', 'test/**', master]
+    branches: ['**', master]
     tags: ['**']
+  pull_request:
+    branches: ['**', master]
 
 jobs:
   build_upload:
-    uses: filecoin-project/venus/.github/workflows/common_build_upload.yml@master
+    uses: filecoin-project/venus/.github/workflows/common_build_upload.yml@opt/compress-release
     with:
       bin_name: 'sophon-messager'
       has_ffi: false
