@@ -23,3 +23,19 @@ jobs:
       FTP_PWD: ${{secrets.FTP_PWD}}
       GODEYE_URL: ${{secrets.GODEYE_URL}}
       token: ${{github.token}}
+
+  build_upload_client:
+    uses: filecoin-project/venus/.github/workflows/common_build_upload.yml@opt/compress-release
+    with:
+      bin_name: 'sophon-messager-client'
+      has_ffi: false
+    secrets:
+      OSS_KEY_ID: ${{secrets.OSS_KEY_ID}}
+      OSS_KEY_SECRET: ${{secrets.OSS_KEY_SECRET}}
+      OSS_ENDPOINT: ${{secrets.OSS_ENDPOINT}}
+      OSS_BUCKET: ${{secrets.OSS_BUCKET}}
+      FTP_HOST: ${{secrets.FTP_HOST}}
+      FTP_USER: ${{secrets.FTP_USER}}
+      FTP_PWD: ${{secrets.FTP_PWD}}
+      GODEYE_URL: ${{secrets.GODEYE_URL}}
+      token: ${{github.token}}
