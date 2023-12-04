@@ -10,6 +10,7 @@ GOFLAGS+=-ldflags="$(ldflags)"
 build:
 	rm -rf sophon-messager
 	go build $(GOFLAGS) -o sophon-messager .
+	cp sophon-messager sophon-messager-client
 
 tools:
 	rm -rf sophon-messager-tools
