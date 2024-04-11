@@ -52,4 +52,5 @@ jobs:
           files: ./coverage.txt
           flags: unittests
           name: venus-messager
+          fail_ci_if_error: true
           verbose: true
