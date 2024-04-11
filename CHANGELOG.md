@@ -112,3 +112,4 @@
 * 使用 untrust 接口推送消息 [[#306](https://github.com/ipfs-force-community/sophon-messager/pull/306)]
 * 按从小到大查询 unchain 消息 [[#307](https://github.com/ipfs-force-community/sophon-messager/pull/307)]
 * 移除测试中的重复代码 [[#308](https://github.com/ipfs-force-community/sophon-messager/pull/308)]
+
