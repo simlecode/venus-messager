@@ -48,6 +48,7 @@ jobs:
       - name: Upload
         uses: codecov/codecov-action@v2
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.txt
           flags: unittests
           name: venus-messager
